@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Print Quote Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #007AFF;
+            --primary-dark: #0056CC;
+            --secondary: #5856D6;
+            --success: #34C759;
+            --danger: #FF3B30;
+            --warning: #FF9500;
+            --bg-light: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-alt: #f8f9fa;
+            --border: #e5e5e5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6c757d;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.12);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        .col-12 { grid-column: span 12; }
+        .col-8 { grid-column: span 8; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+
+        @media (max-width: 1024px) {
+            .col-8, .col-6, .col-4 {
+                grid-column: span 12;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .form-group:focus-within label {
+            color: var(--primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238B949E'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #D63027;
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #2DA84E;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .summary-dashboard {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--primary);
+            border-width: 2px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .summary-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .summary-total {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid var(--border);
+        }
+
+        .summary-total .summary-label {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .summary-total .summary-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background:#34C759;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 32px;
+            animation: fadeInUp 0.6s ease-out 0.4s both;
+        }
+
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 32px 0;
+        }
+
+        .subtotal {
+            background: var(--bg-card-alt);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            margin-top: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .subtotal-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .subtotal-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 28px;
+            box-shadow: var(--shadow-hover);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+
+        .toast-icon {
+            font-size: 1.5rem;
+            margin-right: 12px;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .row {
+                flex-direction: column;
+            }
+
+            .action-bar {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .toast {
+                right: 16px;
+                left: 16px;
+                bottom: 16px;
+            }
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            .card {
+                background: white !important;
+                border: 1px solid #ccc !important;
+                box-shadow: none !important;
+                break-inside: avoid;
+            }
+
+            .btn, .action-bar {
+                display: none !important;
+            }
+
+            .toast {
+                display: none !important;
+            }
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .form-control.has-suffix {
+            padding-right: 50px;
+        }
+
+        #pdf-template {
+            display: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><strong>3D Print Quote</strong></h1>
+        </header>
+
+        <div class="grid">
+            <!-- Client Section -->
+            <div class="card col-6">
+                <h2 class="card-title">Client Information</h2>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="clientName">Client Name</label>
+                            <input type="text" id="clientName" class="form-control" placeholder="Enter client name">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="projectName">Project Name</label>
+                            <input type="text" id="projectName" class="form-control" placeholder="Enter project name">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="quoteDate">Date</label>
+                            <input type="date" id="quoteDate" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="quoteNumber">Quote Number</label>
+                            <input type="text" id="quoteNumber" class="form-control" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Design Section -->
+            <div class="card col-6">
+                <h2 class="card-title">Design Services</h2>
+                <div class="form-group">
+                    <label for="designType">Design Type</label>
+                    <select id="designType" class="form-control">
+                        <option value="none">No design needed</option>
+                        <option value="small">Small modification</option>
+                        <option value="large">Large modification</option>
+                        <option value="full">Full custom design</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="designHours">Design Hours</label>
+                            <div class="input-group">
+                                <input type="number" id="designHours" class="form-control" placeholder="0" min="0" step="0.5">
+                                <span class="input-suffix">h</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="hourlyRate">Hourly Rate</label>
+                            <div class="input-group">
+                                <input type="number" id="hourlyRate" class="form-control has-suffix" placeholder="0" min="0" step="1">
+                                <span class="input-suffix">€</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="subtotal">
+                    <div class="subtotal-label">Design Cost</div>
+                    <div class="subtotal-value" id="designCost">€0.00</div>
+                </div>
+            </div>
+
+            <!-- Prototypes Section -->
+            <div class="card col-6">
+                <h2 class="card-title">Prototypes</h2>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="numberOfPrototypes">Number of Prototypes</label>
+                            <input type="number" id="numberOfPrototypes" class="form-control" placeholder="0" min="0" step="1">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="costPerPrototype">Cost per Prototype</label>
+                            <div class="input-group">
+                                <input type="number" id="costPerPrototype" class="form-control has-suffix" placeholder="0" min="0" step="0.01">
+                                <span class="input-suffix">€</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="subtotal">
+                    <div class="subtotal-label">Prototypes Subtotal</div>
+                    <div class="subtotal-value" id="prototypesSubtotal">€0.00</div>
+                </div>
+            </div>
+
+            <!-- Final Product Section -->
+            <div class="card col-6">
+                <h2 class="card-title">Final Production</h2>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="materialGrams">Material Grams</label>
+                            <div class="input-group">
+                                <input type="number" id="materialGrams" class="form-control" placeholder="0" min="0" step="1">
+                                <span class="input-suffix">g</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="printTime">Print Time (1plate)</label>
+                            <div class="input-group">
+                                <input type="number" id="printTime" class="form-control" placeholder="0" min="0" step="0.5">
+                                <span class="input-suffix">h</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="printPlates">Number of Plates</label>
+                            <input type="number" id="printPlates" class="form-control" placeholder="0" min="0" step="1">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="postProcessing">Post-processing</label>
+                            <div class="input-group">
+                                <input type="number" id="postProcessing" class="form-control has-suffix" placeholder="0" min="0" step="1">
+                                <span class="input-suffix">€</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="assemblyCost">Assembly Cost</label>
+                            <div class="input-group">
+                                <input type="number" id="assemblyCost" class="form-control has-suffix" placeholder="0" min="0" step="1">
+                                <span class="input-suffix">€</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="extraComponents">Extra Components</label>
+                            <div class="input-group">
+                                <input type="number" id="extraComponents" class="form-control has-suffix" placeholder="0" min="0" step="1">
+                                <span class="input-suffix">€</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="subtotal">
+                    <div class="subtotal-label">Production Cost</div>
+                    <div class="subtotal-value" id="productionCost">€0.00</div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="card col-12">
+                <h2 class="card-title">Global Settings</h2>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label for="materialCostPerGram">Material Cost/kg</label>
+                        <div class="input-group">
+                            <input type="number" id="materialCostPerGram" class="form-control has-suffix" placeholder="0" min="0" step="0.01">
+                            <span class="input-suffix">€</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="printerHourlyCost">Printer Hourly Cost</label>
+                        <div class="input-group">
+                            <input type="number" id="printerHourlyCost" class="form-control has-suffix" placeholder="0" min="0" step="0.01">
+                            <span class="input-suffix">€</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="electricityCost">Electricity Cost/h</label>
+                        <div class="input-group">
+                            <input type="number" id="electricityCost" class="form-control has-suffix" placeholder="0" min="0" step="0.01">
+                            <span class="input-suffix">€</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="laborHourlyRate">Labor Hourly Rate</label>
+                        <div class="input-group">
+                            <input type="number" id="laborHourlyRate" class="form-control has-suffix" placeholder="0" min="0" step="0.01">
+                            <span class="input-suffix">€</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="profitMargin">Discount</label>
+                        <div class="input-group">
+                            <input type="number" id="profitMargin" class="form-control" placeholder="0" min="0" max="100" step="1">
+                            <span class="input-suffix">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Summary Section -->
+            <div class="card summary-dashboard col-12">
+                <h2 class="card-title">Live Summary</h2>
+                <div class="summary-item">
+                    <span class="summary-label">Design Cost</span>
+                    <span class="summary-value" id="summaryDesign">€0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Prototype Costs</span>
+                    <span class="summary-value" id="summaryPrototypes">€0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Material Costs</span>
+                    <span class="summary-value" id="summaryMaterial">€0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Printing Costs</span>
+                    <span class="summary-value" id="summaryPrinting">€0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Labor Costs</span>
+                    <span class="summary-value" id="summaryLabor">€0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Electricity Costs</span>
+                    <span class="summary-value" id="summaryElectricity">€0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Post-Processing & Assembly</span>
+                    <span class="summary-value" id="summaryPostProcessing">€0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Extra Components</span>
+                    <span class="summary-value" id="summaryExtras">€0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Discount</span>
+                    <span class="summary-value" id="summaryProfit">€0.00</span>
+                </div>
+                <div class="summary-total">
+                    <div class="summary-item">
+                        <span class="summary-label">Final Total</span>
+                        <span class="summary-value" id="summaryTotal">€0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <footer style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+            <p>© 2026 3D Printing Studio — All rights reserved.</p>
+            <p>This quotation is valid for 30 days from the date of issue.</p>
+            <p>In case of printing issues, additional costs may apply for reprints or corrections.</p>
+            <p>However, the total final cost will never exceed 50% above the initial quoted price without prior approval.</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon">✓</span>
+        <span id="toastMessage">Operation completed successfully</span>
+    </div>
+
+    <!-- PDF Template -->
+    <div id="pdf-template">
+        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #333;">
+            <div style="text-align: center; margin-bottom: 40px;">
+                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #007AFF, #5856D6); border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 40px;">3D</div>
+                <h1 style="font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;">3D Printing Quotation</h1>
+                <p style="color: #666; font-size: 14px;">Professional Quote for Manufacturing Services</p>
+            </div>
+
+            <div style="background: #f5f5f7; padding: 24px; border-radius: 12px; margin-bottom: 32px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #007AFF;">Quote Details</h3>
+                        <p style="margin: 8px 0; font-size: 14px;"><strong>Quote Number:</strong> <span class="pdf-quote-number"></span></p>
+                        <p style="margin: 8px 0; font-size: 14px;"><strong>Date:</strong> <span class="pdf-date"></span></p>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #007AFF;">Client Information</h3>
+                        <p style="margin: 8px 0; font-size: 14px;"><strong>Client:</strong> <span class="pdf-client-name"></span></p>
+                        <p style="margin: 8px 0; font-size: 14px;"><strong>Project:</strong> <span class="pdf-project-name"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 32px;">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #1a1a1a; border-bottom: 2px solid #007AFF; padding-bottom: 8px;">Cost Breakdown</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f5f5f7;">
+                            <th style="padding: 12px; text-align: left; font-size: 14px; font-weight: 600;">Item</th>
+                            <th style="padding: 12px; text-align: right; font-size: 14px; font-weight: 600;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #e5e5e5;">
+                            <td style="padding: 12px; font-size: 14px;">Design Services</td>
+                            <td style="padding: 12px; text-align: right; font-size: 14px;" class="pdf-design-cost"></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e5e5;">
+                            <td style="padding: 12px; font-size: 14px;">Prototypes</td>
+                            <td style="padding: 12px; text-align: right; font-size: 14px;" class="pdf-prototypes-cost"></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e5e5;">
+                            <td style="padding: 12px; font-size: 14px;">Material Costs</td>
+                            <td style="padding: 12px; text-align: right; font-size: 14px;" class="pdf-material-cost"></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e5e5;">
+                            <td style="padding: 12px; font-size: 14px;">Printing Costs</td>
+                            <td style="padding: 12px; text-align: right; font-size: 14px;" class="pdf-printing-cost"></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e5e5;">
+                            <td style="padding: 12px; font-size: 14px;">Labor Costs</td>
+                            <td style="padding: 12px; text-align: right; font-size: 14px;" class="pdf-labor-cost"></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e5e5;">
+                            <td style="padding: 12px; font-size: 14px;">Electricity Costs</td>
+                            <td style="padding: 12px; text-align: right; font-size: 14px;" class="pdf-electricity-cost"></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e5e5;">
+                            <td style="padding: 12px; font-size: 14px;">Post-Processing & Assembly</td>
+                            <td style="padding: 12px; text-align: right; font-size: 14px;" class="pdf-post-processing-cost"></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e5e5;">
+                            <td style="padding: 12px; font-size: 14px;">Extra Components</td>
+                            <td style="padding: 12px; text-align: right; font-size: 14px;" class="pdf-extras-cost"></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e5e5;">
+                            <td style="padding: 12px; font-size: 14px;">Discount</td>
+                            <td style="padding: 12px; text-align: right; font-size: 14px;" class="pdf-profit-cost"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #007AFF, #5856D6); padding: 24px; border-radius: 12px; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 20px; font-weight: 600;">Total Amount</span>
+                    <span style="font-size: 32px; font-weight: 700;" class="pdf-total"></span>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e5e5;">
+                <p style="color: #666; font-size: 12px; margin: 8px 0;">This quotation is valid for 30 days from the date of issue.</p>
+                <p style="color: #666; font-size: 12px; margin: 8px 0;">All prices are in Euro (€).</p>
+                <p style="color: #666; font-size: 12px; margin: 8px 0;">Payment terms: 50% advance, 50% upon delivery.</p>
+            </div>
+
+            <div style="margin-top: 32px; text-align: center;">
+                <p style="color: #666; font-size: 12px;">Generated with 3D Print Quote Manager</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        let state = {
+            settings: {
+                materialCostPerGram: 25.00,
+                printerHourlyCost: 2.00,
+                electricityCost: 0.0,
+                laborHourlyRate: 2.00,
+                profitMargin: 0
+            }
+        };
+
+        // DOM Elements
+        const elements = {
+            clientName: document.getElementById('clientName'),
+            projectName: document.getElementById('projectName'),
+            quoteDate: document.getElementById('quoteDate'),
+            quoteNumber: document.getElementById('quoteNumber'),
+            designType: document.getElementById('designType'),
+            designHours: document.getElementById('designHours'),
+            hourlyRate: document.getElementById('hourlyRate'),
+            designCost: document.getElementById('designCost'),
+            numberOfPrototypes: document.getElementById('numberOfPrototypes'),
+            costPerPrototype: document.getElementById('costPerPrototype'),
+            prototypesSubtotal: document.getElementById('prototypesSubtotal'),
+            materialGrams: document.getElementById('materialGrams'),
+            printTime: document.getElementById('printTime'),
+            printPlates: document.getElementById('printPlates'),
+            postProcessing: document.getElementById('postProcessing'),
+            assemblyCost: document.getElementById('assemblyCost'),
+            extraComponents: document.getElementById('extraComponents'),
+            productionCost: document.getElementById('productionCost'),
+            materialCostPerGram: document.getElementById('materialCostPerGram'),
+            printerHourlyCost: document.getElementById('printerHourlyCost'),
+            electricityCost: document.getElementById('electricityCost'),
+            laborHourlyRate: document.getElementById('laborHourlyRate'),
+            profitMargin: document.getElementById('profitMargin'),
+            summaryDesign: document.getElementById('summaryDesign'),
+            summaryPrototypes: document.getElementById('summaryPrototypes'),
+            summaryMaterial: document.getElementById('summaryMaterial'),
+            summaryPrinting: document.getElementById('summaryPrinting'),
+            summaryLabor: document.getElementById('summaryLabor'),
+            summaryElectricity: document.getElementById('summaryElectricity'),
+            summaryPostProcessing: document.getElementById('summaryPostProcessing'),
+            summaryExtras: document.getElementById('summaryExtras'),
+            summaryProfit: document.getElementById('summaryProfit'),
+            summaryProfitLabel: document.getElementById('summaryProfitLabel'),
+            summaryTotal: document.getElementById('summaryTotal'),
+            generatePdf: document.getElementById('generatePdf'),
+            printQuote: document.getElementById('printQuote'),
+            resetQuote: document.getElementById('resetQuote'),
+            toast: document.getElementById('toast'),
+            toastIcon: document.getElementById('toastIcon'),
+            toastMessage: document.getElementById('toastMessage')
+        };
+
+        // Utility Functions
+        const formatCurrency = (value) => {
+            return new Intl.NumberFormat('it-IT', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        };
+
+        const generateQuoteNumber = () => {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const random = String(Math.floor(Math.random() * 9999)).padStart(4, '0');
+            return `QT-${year}${month}-${random}`;
+        };
+
+        const showToast = (message, type = 'success') => {
+            elements.toastMessage.textContent = message;
+            elements.toastIcon.textContent = type === 'success' ? '✓' : '✕';
+            elements.toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                elements.toast.classList.remove('show');
+            }, 3000);
+        };
+
+        const getNumberValue = (element) => {
+            const value = parseFloat(element.value);
+            return isNaN(value) ? 0 : value;
+        };
+
+        // Calculation Functions
+        const calculateDesignCost = () => {
+            const hours = getNumberValue(elements.designHours);
+            const rate = getNumberValue(elements.hourlyRate);
+            const cost = hours * rate;
+            elements.designCost.textContent = formatCurrency(cost);
+            return cost;
+        };
+
+        const calculatePrototypesSubtotal = () => {
+            const numberOfPrototypes = getNumberValue(elements.numberOfPrototypes);
+            const costPerPrototype = getNumberValue(elements.costPerPrototype);
+            const subtotal = numberOfPrototypes * costPerPrototype;
+            elements.prototypesSubtotal.textContent = formatCurrency(subtotal);
+            return subtotal;
+        };
+
+        const calculateProductionCost = () => {
+            const materialGrams = getNumberValue(elements.materialGrams);
+            const printTime = getNumberValue(elements.printTime);
+            const printPlates = getNumberValue(elements.printPlates);
+            const postProcessing = getNumberValue(elements.postProcessing);
+            const assemblyCost = getNumberValue(elements.assemblyCost);
+            const extraComponents = getNumberValue(elements.extraComponents);
+
+            // Convert grams to kg for material cost calculation
+            const materialKg = materialGrams / 1000;
+            const materialCost = materialKg * (state.settings.materialCostPerGram || 0);
+            const printCost = printTime * (state.settings.printerHourlyCost || 0) * printPlates;
+            const electricityCost = printTime * (state.settings.electricityCost || 0);
+            const totalCost = materialCost + printCost + electricityCost + postProcessing + assemblyCost + extraComponents;
+
+            elements.productionCost.textContent = formatCurrency(totalCost);
+            return {
+                materialCost,
+                printCost,
+                electricityCost,
+                postProcessing,
+                assemblyCost,
+                extraComponents,
+                totalCost
+            };
+        };
+
+        const calculateAll = () => {
+            const designCost = calculateDesignCost();
+            const prototypesCost = calculatePrototypesSubtotal();
+            const production = calculateProductionCost();
+
+            const totalBeforeProfit = designCost + prototypesCost + production.totalCost;
+            const profitMargin = state.settings.profitMargin || 0;
+            const profitAmount = totalBeforeProfit * (-profitMargin / 100);
+            const finalTotal = totalBeforeProfit + profitAmount;
+
+            elements.summaryDesign.textContent = formatCurrency(designCost);
+            elements.summaryPrototypes.textContent = formatCurrency(prototypesCost);
+            elements.summaryMaterial.textContent = formatCurrency(production.materialCost);
+            elements.summaryPrinting.textContent = formatCurrency(production.printCost);
+            elements.summaryLabor.textContent = formatCurrency(0);
+            elements.summaryElectricity.textContent = formatCurrency(production.electricityCost);
+            elements.summaryPostProcessing.textContent = formatCurrency(production.postProcessing + production.assemblyCost);
+            elements.summaryExtras.textContent = formatCurrency(production.extraComponents);
+            elements.summaryProfit.textContent = formatCurrency(profitAmount);
+            elements.summaryTotal.textContent = formatCurrency(finalTotal);
+
+            return {
+                designCost,
+                prototypesCost,
+                materialCost: production.materialCost,
+                printingCost: production.printCost,
+                laborCost: 0,
+                electricityCost: production.electricityCost,
+                postProcessingCost: production.postProcessing + production.assemblyCost,
+                extrasCost: production.extraComponents,
+                profitAmount,
+                finalTotal,
+                profitMargin
+            };
+        };
+
+        // Settings Management
+        const updateSettings = () => {
+            state.settings.materialCostPerGram = getNumberValue(elements.materialCostPerGram);
+            state.settings.printerHourlyCost = getNumberValue(elements.printerHourlyCost);
+            state.settings.electricityCost = getNumberValue(elements.electricityCost);
+            state.settings.laborHourlyRate = getNumberValue(elements.laborHourlyRate);
+            state.settings.profitMargin = getNumberValue(elements.profitMargin);
+            calculateAll();
+            saveToLocalStorage();
+        };
+
+        const loadSettings = () => {
+            elements.materialCostPerGram.value = state.settings.materialCostPerGram;
+            elements.printerHourlyCost.value = state.settings.printerHourlyCost;
+            elements.electricityCost.value = state.settings.electricityCost;
+            elements.laborHourlyRate.value = state.settings.laborHourlyRate;
+            elements.profitMargin.value = state.settings.profitMargin;
+        };
+
+        // PDF Generation
+        const generatePDF = () => {
+            const costs = calculateAll();
+            
+            // Populate PDF template
+            const template = document.getElementById('pdf-template');
+            template.querySelector('.pdf-quote-number').textContent = elements.quoteNumber.value;
+            template.querySelector('.pdf-date').textContent = elements.quoteDate.value;
+            template.querySelector('.pdf-client-name').textContent = elements.clientName.value || 'N/A';
+            template.querySelector('.pdf-project-name').textContent = elements.projectName.value || 'N/A';
+            template.querySelector('.pdf-design-cost').textContent = formatCurrency(costs.designCost);
+            template.querySelector('.pdf-prototypes-cost').textContent = formatCurrency(costs.prototypesCost);
+            template.querySelector('.pdf-material-cost').textContent = formatCurrency(costs.materialCost);
+            template.querySelector('.pdf-printing-cost').textContent = formatCurrency(costs.printingCost);
+            template.querySelector('.pdf-labor-cost').textContent = formatCurrency(costs.laborCost);
+            template.querySelector('.pdf-electricity-cost').textContent = formatCurrency(costs.electricityCost);
+            template.querySelector('.pdf-post-processing-cost').textContent = formatCurrency(costs.postProcessingCost);
+            template.querySelector('.pdf-extras-cost').textContent = formatCurrency(costs.extrasCost);
+            
+            // Update profit/discount label in PDF based on value
+            if (costs.profitMargin >= 0) {
+                template.querySelector('.pdf-profit-label').textContent = 'Profit Margin';
+            } else {
+                template.querySelector('.pdf-profit-label').textContent = 'Discount';
+            }
+            
+            template.querySelector('.pdf-profit-cost').textContent = formatCurrency(costs.profitAmount);
+            template.querySelector('.pdf-total').textContent = formatCurrency(costs.finalTotal);
+
+            // Generate PDF
+            template.style.display = 'block';
+            const opt = {
+                margin: 10,
+                filename: `Quote_${elements.quoteNumber.value}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(template).save().then(() => {
+                template.style.display = 'none';
+                showToast('PDF generated successfully!', 'success');
+            }).catch(err => {
+                template.style.display = 'none';
+                console.error(err);
+                showToast('Error generating PDF', 'error');
+            });
+        };
+
+        // Local Storage
+        const saveToLocalStorage = () => {
+            const data = {
+                client: {
+                    name: elements.clientName.value,
+                    project: elements.projectName.value,
+                    date: elements.quoteDate.value,
+                    quoteNumber: elements.quoteNumber.value
+                },
+                design: {
+                    type: elements.designType.value,
+                    hours: elements.designHours.value,
+                    hourlyRate: elements.hourlyRate.value
+                },
+                production: {
+                    materialGrams: elements.materialGrams.value,
+                    printTime: elements.printTime.value,
+                    printPlates: elements.printPlates.value,
+                    postProcessing: elements.postProcessing.value,
+                    assemblyCost: elements.assemblyCost.value,
+                    extraComponents: elements.extraComponents.value
+                },
+                prototypes: {
+                    numberOfPrototypes: elements.numberOfPrototypes.value,
+                    costPerPrototype: elements.costPerPrototype.value
+                },
+                settings: state.settings
+            };
+            localStorage.setItem('3dPrintQuote', JSON.stringify(data));
+        };
+
+        const loadFromLocalStorage = () => {
+            const saved = localStorage.getItem('3dPrintQuote');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    
+                    // Load client data
+                    if (data.client) {
+                        elements.clientName.value = data.client.name || '';
+                        elements.projectName.value = data.client.project || '';
+                        elements.quoteDate.value = data.client.date || '';
+                        if (data.client.quoteNumber) {
+                            elements.quoteNumber.value = data.client.quoteNumber;
+                        }
+                    }
+
+                    // Load design data
+                    if (data.design) {
+                        elements.designType.value = data.design.type || 'none';
+                        elements.designHours.value = data.design.hours || '';
+                        elements.hourlyRate.value = data.design.hourlyRate || '';
+                    }
+
+                    // Load production data
+                    if (data.production) {
+                        elements.materialGrams.value = data.production.materialGrams || '';
+                        elements.printTime.value = data.production.printTime || '';
+                        elements.printPlates.value = data.production.printPlates || '';
+                        elements.postProcessing.value = data.production.postProcessing || '';
+                        elements.assemblyCost.value = data.production.assemblyCost || '';
+                        elements.extraComponents.value = data.production.extraComponents || '';
+                    }
+
+                    // Load prototypes
+                    if (data.prototypes) {
+                        elements.numberOfPrototypes.value = data.prototypes.numberOfPrototypes || '';
+                        elements.costPerPrototype.value = data.prototypes.costPerPrototype || '';
+                    }
+
+                    // Load settings
+                    if (data.settings) {
+                        state.settings = data.settings;
+                        loadSettings();
+                    }
+
+                    calculateAll();
+                } catch (e) {
+                    console.error('Error loading from localStorage:', e);
+                }
+            }
+        };
+
+        const resetQuote = () => {
+            if (confirm('Are you sure you want to reset the entire quote? This action cannot be undone.')) {
+                // Reset client fields
+                elements.clientName.value = '';
+                elements.projectName.value = '';
+                elements.quoteDate.value = new Date().toISOString().split('T')[0];
+                elements.quoteNumber.value = generateQuoteNumber();
+
+                // Reset design fields
+                elements.designType.value = 'none';
+                elements.designHours.value = '';
+                elements.hourlyRate.value = '';
+
+                // Reset production fields
+                elements.materialGrams.value = '';
+                elements.printTime.value = '';
+                elements.printPlates.value = '';
+                elements.postProcessing.value = '';
+                elements.assemblyCost.value = '';
+                elements.extraComponents.value = '';
+
+                // Reset prototypes
+                elements.numberOfPrototypes.value = '';
+                elements.costPerPrototype.value = '';
+
+                // Reset settings to defaults
+                state.settings = {
+                    materialCostPerGram: 25.00,
+                    printerHourlyCost: 2.00,
+                    electricityCost: 0.50,
+                    laborHourlyRate: 25.00,
+                    profitMargin: 20
+                };
+                loadSettings();
+
+                // Recalculate and save
+                calculateAll();
+                saveToLocalStorage();
+
+                showToast('Quote reset successfully', 'success');
+            }
+        };
+
+        const printQuote = () => {
+            window.print();
+        };
+
+        // Event Listeners
+        const setupEventListeners = () => {
+            // Client fields
+            [elements.clientName, elements.projectName, elements.quoteDate].forEach(el => {
+                el.addEventListener('input', saveToLocalStorage);
+            });
+
+            // Design fields
+            elements.designType.addEventListener('change', saveToLocalStorage);
+            elements.designHours.addEventListener('input', () => {
+                calculateDesignCost();
+                calculateAll();
+                saveToLocalStorage();
+            });
+            elements.hourlyRate.addEventListener('input', () => {
+                calculateDesignCost();
+                calculateAll();
+                saveToLocalStorage();
+            });
+
+            // Production fields
+            [elements.materialGrams, elements.printTime, elements.printPlates, elements.postProcessing, elements.assemblyCost, elements.extraComponents].forEach(el => {
+                el.addEventListener('input', () => {
+                    calculateProductionCost();
+                    calculateAll();
+                    saveToLocalStorage();
+                });
+            });
+
+            // Prototype fields
+            [elements.numberOfPrototypes, elements.costPerPrototype].forEach(el => {
+                el.addEventListener('input', () => {
+                    calculatePrototypesSubtotal();
+                    calculateAll();
+                    saveToLocalStorage();
+                });
+            });
+
+            // Settings fields
+            [elements.materialCostPerGram, elements.printerHourlyCost, elements.electricityCost, elements.laborHourlyRate, elements.profitMargin].forEach(el => {
+                el.addEventListener('input', updateSettings);
+            });
+
+            // Buttons
+            elements.generatePdf.addEventListener('click', generatePDF);
+            elements.resetQuote.addEventListener('click', resetQuote);
+            elements.printQuote.addEventListener('click', printQuote);
+        };
+
+        // Initialize
+        const init = () => {
+            // Set initial date
+            elements.quoteDate.value = new Date().toISOString().split('T')[0];
+            
+            // Generate initial quote number if not exists
+            if (!elements.quoteNumber.value) {
+                elements.quoteNumber.value = generateQuoteNumber();
+            }
+
+            // Load default settings
+            loadSettings();
+
+            // Load from localStorage
+            loadFromLocalStorage();
+
+            // Setup event listeners
+            setupEventListeners();
+
+            // Initial calculation
+            calculateAll();
+        };
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
